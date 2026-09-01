@@ -58,6 +58,7 @@ test('Browser Context Playwright test', async ({ browser }) => {
     const userName = page.locator('#username');
     const password = page.locator('[type="password"]');
     const signIn = page.locator('#signInBtn');
+    cont cardTitle = page.locator('.card-body a');
 
     await page.goto('https://rahulshettyacademy.com/loginpagePractise/');
 
@@ -83,15 +84,10 @@ test('Browser Context Playwright test', async ({ browser }) => {
     await userName.fill('');
     await userName.fill('rahulshettyacademy');
     await signIn.click();
+    
+    // .fitst() -> primer elemento
+    console.log(await cardTitle.first().textContent());
 
-
-    // nth(0) -> primer elemento
-    console.log(
-        await page.locator('.card-body a').nth(0).textContent()
-    );
-
-    // first() -> también obtiene el primer elemento
-    console.log(
-        await page.locator('.card-body a').first().textContent()
-    );
+    // .nth(n) -> elemento n
+    console.log(await cardTitle.nth(1).textContent());
 });
