@@ -2,14 +2,16 @@
 // .form-control         -> clase
 // input[type='submit']  -> atributo
 
-// newContext()   -> nueva sesión aislada
-// newPage()      -> nueva pestaña/página
-// goto()         -> navegar a una URL
-// locator()      -> localizar elemento
-// fill()         -> escribir/reemplazar texto
-// click()        -> hacer clic
-// textContent()  -> obtener texto
-// expect()       -> validar
+// newContext()      -> nueva sesión aislada
+// newPage()         -> nueva pestaña/página
+// goto()            -> navegar a una URL
+// locator()         -> localizar elemento
+// fill()            -> escribir/reemplazar texto
+// click()           -> hacer clic
+// textContent()     -> obtener texto de un elemento
+// allTextContents() -> obtener el texto de todos los elementos
+// waitFor()         -> esperar a que aparezca un elemento
+// expect()          -> validar
 
 
 const { test, expect } = require('@playwright/test');
@@ -54,27 +56,29 @@ test('Browser Context Playwright test', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // Guardamos los locators para poder reutilizarlos
+    // Guardamos los locators para reutilizarlos
     const userName = page.locator('#username');
     const password = page.locator('[type="password"]');
     const signIn = page.locator('#signInBtn');
-    cont cardTitle = page.locator('.card-body a');
+    const cardTitles = page.locator('.card-body a');
 
     await page.goto('https://rahulshettyacademy.com/loginpagePractise/');
 
     console.log(await page.title());
+
 
     // Login incorrecto
     await userName.fill('rahulshetty');
     await password.fill('Learning@830$3mK2');
     await signIn.click();
 
+
     // Muestra el mensaje de error
     console.log(
         await page.locator("[style*='block']").textContent()
     );
 
-    // Comprueba que el error contiene "Incorrect"
+    // Comprueba que el mensaje contiene "Incorrect"
     await expect(
         page.locator("[style*='block']")
     ).toContainText('Incorrect');
@@ -83,11 +87,28 @@ test('Browser Context Playwright test', async ({ browser }) => {
     // Cambiamos al usuario correcto
     await userName.fill('');
     await userName.fill('rahulshettyacademy');
-    await signIn.click();
-    
-    // .fitst() -> primer elemento
-    console.log(await cardTitle.first().textContent());
 
-    // .nth(n) -> elemento n
-    console.log(await cardTitle.nth(1).textContent());
+    // La contraseña ya es correcta, por lo que no hace falta cambiarla
+    await signIn.click();
+
+
+    // Esperamos a que aparezca el primer producto
+    // antes de intentar obtener todos los títulos
+    await cardTitles.first().waitFor();
+
+
+    // Obtiene el texto de TODOS los productos
+    const allCardTitles = await cardTitles.allTextContents();
+
+    // Muestra todos los títulos en consola
+    console.log(allCardTitles);
+
+
+    // first() -> primer elemento
+    // console.log(await cardTitles.first().textContent());
+
+    // nth(n) -> elemento según su posición
+    // nth(0) = primero, nth(1) = segundo...
+    // console.log(await cardTitles.nth(1).textContent());
+
 });
