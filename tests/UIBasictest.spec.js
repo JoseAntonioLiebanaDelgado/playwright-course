@@ -5,6 +5,7 @@
 // #username             -> ID
 // .form-control         -> clase
 // input[type='submit']  -> atributo
+// [href*='texto']       -> atributo que CONTIENE ese texto
 
 // newContext()      -> nueva sesión aislada
 // newPage()         -> nueva pestaña/página
@@ -25,6 +26,7 @@
 // toBeChecked()     -> valida que esté seleccionado
 // uncheck()         -> desmarca un checkbox
 // toBeFalsy()       -> valida que el valor sea false
+// toHaveAttribute() -> valida el valor de un atributo HTML
 // pause()           -> pausa el test y abre Playwright Inspector
 
 
@@ -159,6 +161,9 @@ test('UI Controls', async ({ page }) => {
     const userRadio = page.locator('.radiotextsty').last();
     const terms = page.locator('#terms');
 
+    // Busca un enlace cuyo href contenga "documents-request"
+    const documentLink = page.locator("[href*='documents-request']");
+
 
     // Selecciona "Consultant" en el desplegable
     await dropdown.selectOption('consult');
@@ -194,6 +199,14 @@ test('UI Controls', async ({ page }) => {
 
     // Comprueba que ya NO está marcado
     await expect(terms).not.toBeChecked();
+
+
+    // Comprueba que el enlace tiene:
+    // class="blinkingText"
+    await expect(documentLink).toHaveAttribute(
+        'class',
+        'blinkingText'
+    );
 
 
     // Pausa manual para inspeccionar el test
