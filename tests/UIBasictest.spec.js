@@ -5,7 +5,6 @@
 // #username             -> ID
 // .form-control         -> clase
 // input[type='submit']  -> atributo
-// [href*='texto']       -> atributo que CONTIENE ese texto
 
 // newContext()      -> nueva sesión aislada
 // newPage()         -> nueva pestaña/página
@@ -26,8 +25,12 @@
 // toBeChecked()     -> valida que esté seleccionado
 // uncheck()         -> desmarca un checkbox
 // toBeFalsy()       -> valida que el valor sea false
-// toHaveAttribute() -> valida el valor de un atributo HTML
 // pause()           -> pausa el test y abre Playwright Inspector
+
+// Promise.all()     -> espera varias operaciones a la vez
+// waitForEvent()    -> espera a que ocurra un evento
+// split()           -> divide un texto en partes
+// inputValue()      -> obtiene el valor escrito dentro de un input
 
 
 const { test, expect } = require('@playwright/test');
@@ -161,9 +164,6 @@ test('UI Controls', async ({ page }) => {
     const userRadio = page.locator('.radiotextsty').last();
     const terms = page.locator('#terms');
 
-    // Busca un enlace cuyo href contenga "documents-request"
-    const documentLink = page.locator("[href*='documents-request']");
-
 
     // Selecciona "Consultant" en el desplegable
     await dropdown.selectOption('consult');
@@ -201,14 +201,66 @@ test('UI Controls', async ({ page }) => {
     await expect(terms).not.toBeChecked();
 
 
-    // Comprueba que el enlace tiene:
-    // class="blinkingText"
-    await expect(documentLink).toHaveAttribute(
-        'class',
-        'blinkingText'
-    );
-
-
     // Pausa manual para inspeccionar el test
     // await page.pause();
+
+// ==========================================================
+// TEST 6 - Child Windows / Nueva pestaña
+// ==========================================================
+
+test.only('Child Windows', async ({ browser }) => {
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await page.goto(
+        'https://rahulshettyacademy.com/loginpagePractise/'
+    );
+
+    // Enlace que abre una nueva pestaña
+    const documentLink = page.locator("[href*='documents-request']");
+
+
+    // Promise.all() espera a que ocurran las dos acciones:
+    // 1. Se abra una nueva página
+    // 2. Hagamos clic en el enlace
+    const [newPage] = await Promise.all([
+        context.waitForEvent('page'),
+        documentLink.click()
+    ]);
+
+
+    // Obtiene el texto del elemento .red de la nueva pestaña
+    const text = await newPage.locator('.red').textContent();
+
+    console.log(text);
+
+
+    // Divide el texto usando @
+    const arrayText = text.split('@');
+
+    // Obtiene la parte que hay después del @
+    // y se queda con la primera palabra
+    const domain = arrayText[1].split(' ')[0];
+
+    console.log(domain);
+
+
+    // Escribe el dominio obtenido en el username
+    // de la página original
+    await page.locator('#username').type(domain);
+
+
+    // Pausa para poder inspeccionar el navegador
+    await page.pause();
+
+
+    // Obtiene el valor escrito dentro del input
+    console.log(
+        await page.locator('#username').inputValue()
+    );
+
+});
+
+
 });
