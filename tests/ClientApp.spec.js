@@ -1,12 +1,12 @@
 // ==========================================================
-// CLIENT APP - LOGIN, PRODUCTOS, CARRITO Y CHECKOUT
+// CLIENT APP - END TO END TEST
 // ==========================================================
 //
 // Aplicación:
 //
 // https://rahulshettyacademy.com/client
 //
-// Flujo actual:
+// Flujo completo:
 //
 // 1. Abrir la aplicación
 // 2. Hacer login
@@ -17,10 +17,18 @@
 // 7. Entrar al carrito
 // 8. Validar que el producto está en el carrito
 // 9. Ir al Checkout
-// 10. Escribir "ind" en el selector de país
-// 11. Buscar India dinámicamente
+// 10. Escribir "ind" en Country
+// 11. Buscar India entre las sugerencias
 // 12. Seleccionar India
-// 13. Validar que India ha quedado seleccionada
+// 13. Validar el país
+// 14. Validar el email del Checkout
+// 15. Realizar el pedido
+// 16. Validar el mensaje de confirmación
+// 17. Obtener el Order ID
+// 18. Ir a Orders
+// 19. Buscar nuestro pedido dinámicamente
+// 20. Entrar en View
+// 21. Validar que el Order ID coincide
 //
 // ==========================================================
 
@@ -28,20 +36,24 @@
 const { test, expect } = require('@playwright/test');
 
 
-test('Client App login', async ({ page }) => {
+test('Client App E2E order flow', async ({ page }) => {
 
 
     // ======================================================
     // DATOS DEL TEST
     // ======================================================
 
-    // Email utilizado para iniciar sesión
     const email = 'anshika@gmail.com';
 
+    const password = 'Iamking@000';
 
-    // Producto que queremos comprar
     const productName = 'ZARA COAT 3';
 
+
+
+    // ======================================================
+    // LOCATORS PRINCIPALES
+    // ======================================================
 
     // Cada .card-body representa una tarjeta de producto
     const products = page.locator('.card-body');
@@ -66,12 +78,14 @@ test('Client App login', async ({ page }) => {
 
     // Introducimos la contraseña
     await page.locator('#userPassword').fill(
-        'Iamking@000'
+        password
     );
 
 
     // Pulsamos Login
-    await page.locator("[value='Login']").click();
+    await page
+        .locator("[value='Login']")
+        .click();
 
 
 
@@ -79,53 +93,58 @@ test('Client App login', async ({ page }) => {
     // ESPERAR A QUE CARGUEN LOS PRODUCTOS
     // ======================================================
 
-    // Esperamos específicamente a que aparezca
-    // el primer título de producto.
+    // Esperamos específicamente al primer producto
     await page
         .locator('.card-body b')
         .first()
         .waitFor();
 
 
-    // Obtenemos el texto de TODOS los productos.
-    //
-    // allTextContents() devuelve un array.
+
+    // ======================================================
+    // OBTENER LOS PRODUCTOS
+    // ======================================================
+
+    // Obtiene el texto de todos los productos
     const titles = await page
         .locator('.card-body b')
         .allTextContents();
 
 
-    // Mostramos los productos en la terminal
-    console.log(titles);
+    // Los mostramos en terminal
+    console.log(
+        'Productos:',
+        titles
+    );
 
 
 
     // ======================================================
-    // BUSCAR EL PRODUCTO
+    // BUSCAR PRODUCTO DINÁMICAMENTE
     // ======================================================
 
-    // Contamos cuántas tarjetas de producto hay.
+    // Contamos cuántos productos hay
     const count = await products.count();
 
 
-    // Recorremos todos los productos uno por uno.
+    // Recorremos todos los productos uno por uno
     for (let i = 0; i < count; i++) {
 
 
-        // Obtenemos el nombre del producto actual.
+        // Obtenemos el nombre del producto actual
         const productTitle = await products
             .nth(i)
             .locator('b')
             .textContent();
 
 
-        // Comparamos el producto actual
-        // con el que queremos comprar.
-        if (productTitle.trim() === productName) {
+        // Comparamos con el producto que queremos
+        if (
+            productTitle.trim() === productName
+        ) {
 
 
-            // Pulsamos Add To Cart únicamente
-            // dentro de la tarjeta del producto encontrado.
+            // Pulsamos Add To Cart
             await products
                 .nth(i)
                 .getByRole(
@@ -135,8 +154,7 @@ test('Client App login', async ({ page }) => {
                 .click();
 
 
-            // Ya encontramos el producto.
-            // Salimos del bucle.
+            // Ya encontramos el producto
             break;
         }
     }
@@ -147,7 +165,6 @@ test('Client App login', async ({ page }) => {
     // ENTRAR AL CARRITO
     // ======================================================
 
-    // Pulsamos el botón Cart.
     await page
         .locator("[routerlink*='cart']")
         .click();
@@ -155,11 +172,22 @@ test('Client App login', async ({ page }) => {
 
 
     // ======================================================
-    // VALIDAR QUE EL PRODUCTO ESTÁ EN EL CARRITO
+    // ESPERAR AL CARRITO
     // ======================================================
 
-    // Comprueba que el producto que hemos añadido
-    // aparece realmente dentro del carrito.
+    await page
+        .locator('div li')
+        .first()
+        .waitFor();
+
+
+
+    // ======================================================
+    // VALIDAR PRODUCTO EN EL CARRITO
+    // ======================================================
+
+    // Comprueba que ZARA COAT 3
+    // aparece realmente en el carrito
     await expect(
         page.getByText(
             productName,
@@ -173,7 +201,6 @@ test('Client App login', async ({ page }) => {
     // CHECKOUT
     // ======================================================
 
-    // Pulsamos Checkout.
     await page
         .locator('text=Checkout')
         .click();
@@ -181,22 +208,18 @@ test('Client App login', async ({ page }) => {
 
 
     // ======================================================
-    // PAÍS - AUTOSUGGEST DROPDOWN
+    // COUNTRY - AUTOSUGGEST
     // ======================================================
 
-    // Localizamos el campo Country.
+    // Campo Country
     const countryInput = page.locator(
         "[placeholder*='Country']"
     );
 
 
-    // Escribimos "ind" carácter por carácter.
+    // Escribimos "ind" carácter por carácter
     //
-    // pressSequentially() simula la escritura
-    // como si fueran pulsaciones reales de teclado.
-    //
-    // El delay de 150 ms viene de la nota
-    // proporcionada por el curso.
+    // El delay de 150 ms viene de la nota del curso
     await countryInput.pressSequentially(
         'ind',
         { delay: 150 }
@@ -205,54 +228,59 @@ test('Client App login', async ({ page }) => {
 
 
     // ======================================================
-    // ESPERAR AL DESPLEGABLE DE PAÍSES
+    // DESPLEGABLE DE PAÍSES
     // ======================================================
 
-    // .ta-results contiene las sugerencias
-    // que aparecen después de escribir "ind".
+    // Contenedor de las sugerencias
     const dropdown = page.locator(
         '.ta-results'
     );
 
 
-    // Esperamos a que aparezca el desplegable.
+    // Esperamos a que aparezca
     await dropdown.waitFor();
 
 
-
-    // ======================================================
-    // BUSCAR INDIA DINÁMICAMENTE
-    // ======================================================
-
-    // Contamos todas las opciones del desplegable.
+    // Contamos las opciones
     const optionsCount = await dropdown
         .locator('button')
         .count();
 
 
-    // Recorremos las opciones una por una.
-    for (let i = 0; i < optionsCount; i++) {
+
+    // ======================================================
+    // BUSCAR INDIA
+    // ======================================================
+
+    // Recorremos las opciones una por una
+    for (
+        let i = 0;
+        i < optionsCount;
+        i++
+    ) {
 
 
-        // Obtenemos el texto de la opción actual.
+        // Obtenemos el texto de la opción actual
         const text = await dropdown
             .locator('button')
             .nth(i)
             .textContent();
 
 
-        // Buscamos exactamente India.
-        if (text.trim() === 'India') {
+        // Buscamos India
+        if (
+            text.trim() === 'India'
+        ) {
 
 
-            // Pulsamos sobre India.
+            // Seleccionamos India
             await dropdown
                 .locator('button')
                 .nth(i)
                 .click();
 
 
-            // Ya hemos encontrado la opción.
+            // Ya la encontramos
             break;
         }
     }
@@ -260,13 +288,182 @@ test('Client App login', async ({ page }) => {
 
 
     // ======================================================
-    // VALIDAR EL PAÍS
+    // VALIDAR PAÍS
     // ======================================================
 
-    // Comprobamos que el campo Country
-    // contiene finalmente el valor India.
     await expect(
         countryInput
     ).toHaveValue('India');
+
+
+
+    // ======================================================
+    // VALIDAR EMAIL DEL CHECKOUT
+    // ======================================================
+
+    // Localizamos el email que aparece
+    // automáticamente en el Checkout
+    const checkoutEmail = page
+        .locator(".user__name [type='text']")
+        .first();
+
+
+    // Como es un input, validamos su value
+    await expect(
+        checkoutEmail
+    ).toHaveValue(email);
+
+
+
+    // ======================================================
+    // REALIZAR PEDIDO
+    // ======================================================
+
+    // Pulsamos Place Order
+    await page
+        .locator('.action__submit')
+        .click();
+
+
+
+    // ======================================================
+    // VALIDAR CONFIRMACIÓN DEL PEDIDO
+    // ======================================================
+
+    // Comprobamos el mensaje de confirmación
+    await expect(
+        page.locator('.hero-primary')
+    ).toHaveText(
+        ' Thankyou for the order. '
+    );
+
+
+
+    // ======================================================
+    // OBTENER ORDER ID
+    // ======================================================
+
+    // Guardamos el ID generado para este pedido
+    const orderId = await page
+        .locator(
+            '.em-spacer-1 .ng-star-inserted'
+        )
+        .textContent();
+
+
+    // Mostramos el Order ID en terminal
+    console.log(
+        'Order ID:',
+        orderId
+    );
+
+
+
+    // ======================================================
+    // IR A ORDERS
+    // ======================================================
+
+    await page
+        .locator(
+            "button[routerlink*='myorders']"
+        )
+        .click();
+
+
+
+    // ======================================================
+    // ESPERAR TABLA DE PEDIDOS
+    // ======================================================
+
+    await page
+        .locator('tbody')
+        .waitFor();
+
+
+
+    // Cada tr representa una fila de la tabla
+    const rows = page.locator(
+        'tbody tr'
+    );
+
+
+
+    // ======================================================
+    // BUSCAR NUESTRO PEDIDO
+    // ======================================================
+
+    // Recorremos todas las filas
+    for (
+        let i = 0;
+        i < await rows.count();
+        i++
+    ) {
+
+
+        // Obtenemos el Order ID de la fila actual
+        const rowOrderId = await rows
+            .nth(i)
+            .locator('th')
+            .textContent();
+
+
+        // Comprobamos si corresponde
+        // al pedido que acabamos de crear
+        if (
+            orderId.includes(
+                rowOrderId.trim()
+            )
+        ) {
+
+
+            // Pulsamos View
+            await rows
+                .nth(i)
+                .locator('button')
+                .first()
+                .click();
+
+
+            // Ya encontramos el pedido
+            break;
+        }
+    }
+
+
+
+    // ======================================================
+    // OBTENER ORDER ID DE DETAILS
+    // ======================================================
+
+    // Obtenemos el ID mostrado
+    // en la página de detalles
+    const orderIdDetails = await page
+        .locator('.col-text')
+        .textContent();
+
+
+
+    // ======================================================
+    // VALIDAR ORDER ID
+    // ======================================================
+
+    // Comprueba que el pedido abierto
+    // es el mismo que acabamos de crear
+    expect(
+        orderId.includes(
+            orderIdDetails.trim()
+        )
+    ).toBeTruthy();
+
+
+
+    // ======================================================
+    // RESULTADO FINAL
+    // ======================================================
+
+    console.log(
+        'Pedido validado correctamente:',
+        orderIdDetails
+    );
 
 });
