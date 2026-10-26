@@ -466,4 +466,43 @@ test('Client App E2E order flow', async ({ page }) => {
         orderIdDetails
     );
 
+
+    // ==========================================================
+// TEST EXTRA - VALIDAR PANTALLA DE LOGIN
+// ==========================================================
+//
+// Comprobamos que los elementos principales
+// de la pantalla de login están disponibles.
+//
+// ==========================================================
+
+test('Login page elements are visible', async ({ page }) => {
+
+    // Abrimos la aplicación
+    await page.goto(
+        'https://rahulshettyacademy.com/client'
+    );
+
+
+    // Campo de email
+    const emailInput = page.locator('#userEmail');
+
+
+    // Campo de contraseña
+    const passwordInput = page.locator('#userPassword');
+
+
+    // Botón Login
+    const loginButton = page.locator("[value='Login']");
+
+
+    // Validamos que los tres elementos estén visibles
+    await expect(emailInput).toBeVisible();
+
+    await expect(passwordInput).toBeVisible();
+
+    await expect(loginButton).toBeVisible();
+
+});
+
 });
